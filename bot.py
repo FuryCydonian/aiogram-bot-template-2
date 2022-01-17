@@ -6,19 +6,25 @@ from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from tg_bot.config import load_config
+from tg_bot.filters.admin import AdminFilter
+from tg_bot.handlers.admin import register_admin
+from tg_bot.handlers.echo import register_echo
+from tg_bot.middlewares.db import DbMiddleware
 
 logger = logging.getLogger(__name__)
 
-def register_middlewares(dp):
-    dp.setup_middleware(...)
+
+def register_all_middlewares(dp):
+    dp.setup_middleware(DbMiddleware())
 
 
-def register_filters(dp):
-    dp.filters_factory.bind(...)
+def register_all_filters(dp):
+    dp.filters_factory.bind(AdminFilter)
 
 
-def register_handlers(dp):
-    # register_admin(dp)
+def register_all_handlers(dp):
+    register_echo(dp)
+    register_admin(dp)
 
 
 async def main():
@@ -35,9 +41,9 @@ async def main():
     dp = Dispatcher(bot, storage=storage)
     bot['config'] = config
 
-    register_middlewares(dp)
-    register_filters(dp)
-    register_handlers(dp)
+    register_all_middlewares(dp)
+    register_all_filters(dp)
+    register_all_handlers(dp)
 
     try:
         await dp.start_polling()
@@ -45,6 +51,7 @@ async def main():
         await dp.storage.close()
         await dp.storage.wait_closed()
         await bot.session.close()
+
 
 if __name__ == '__main__':
     try:
